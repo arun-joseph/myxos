@@ -1,0 +1,22 @@
+APL Compiler
+============
+
+Introduction :
+APL (Application Programmer’s Language) Compiler is used to write programs which can be run on XOS (eXperimental Operating System). The compiler compiles the program written in APL and translates it into machine code which is simulated on the machine.
+
+
+Installation
+
+Prerequisites :
+-------------
+	• GCC (GNU project C and C++ compiler)
+	• Flex / Lex (Fast Lexical Analyser Generator)
+	• Bison / Yacc (GNU Project Parser Generator)
+
+Compiling and Running :
+---------------------
+Run the following commands to compile and run the APL compiler
+	1. make
+	2. ./apl < <path-to-file>
+	
+The output file is named ”apcode.xsm”
