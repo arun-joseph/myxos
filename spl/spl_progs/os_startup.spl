@@ -1,0 +1,28 @@
+load(7,1);
+load(8,2);
+load(23,17);
+load(24,18);
+
+[READY_LIST + 0] = 0; // Sets the entry for PID as 0 
+
+load(25,21); // Load 1st page of code from disk to memory
+load(26,22); // Load 2nd page of code from disk to memory
+load(27,23); // Load 3rd page of code from disk to memory
+
+PTBR = 1024;
+PTLR = 4;
+
+[PTBR + 0] = 25; // Physical Page Number for Logical Page 0
+[PTBR + 1] = "01"; // Auxiliary Information for Logical Page 0
+[PTBR + 2] = 26; // Physical Page Number for Logical Page 1
+[PTBR + 3] = "01"; // Auxiliary Information for Logical Page 1
+[PTBR + 4] = 27; // Physical Page Number for Logical Page 2
+[PTBR + 5] = "01"; // Auxiliary Information for Logical Page 2
+[PTBR + 6] = 28; // Physical Page Number for Logical Page 3 (Stack)
+[PTBR + 7] = "01"; // Auxiliary Information for Logical Page 3 (Stack)
+
+[READY_LIST + 1] = 2; // Sets the entry for STATE as Running 
+SP = 3*512;
+[28*512] = 0; // Set up the IP value for INIT in the stack
+
+ireturn;
