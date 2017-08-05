@@ -6,9 +6,9 @@ sample.dat
 
 
 
--1
-0
--1
+even.xsm
+512
+26
 
 
 

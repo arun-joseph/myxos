@@ -8,6 +8,7 @@ load(23,17);
 load(24,18);
 
 [READY_LIST + 0] = 0; // Sets the entry for PID as 0 
+[READY_LIST + 32] = 1; // Sets the entry for PID as 1
 
 load(25,21); // Load 1st page of code from disk to memory
 load(26,22); // Load 2nd page of code from disk to memory
@@ -28,5 +29,28 @@ PTLR = 4;
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running 
 SP = 3*512;
 [28*512] = 0; // Set up the IP value for INIT in the stack
+
+load(29,25);
+
+alias PTBR_Process1 S0;
+PTBR_Process1 = 1024+1*8;
+
+//Setting up page table for 2nd process
+
+[PTBR_Process1 + 0] = 29; // Physical Page Number for Logical Page 0
+[PTBR_Process1 + 1] = "01"; // Not referenced and Valid
+[PTBR_Process1 + 2] = -1; // Invalid Page Number for Logical Page 1
+[PTBR_Process1 + 3] = "00"; // Not referenced and Not Valid
+[PTBR_Process1 + 4] = -1; // Invalid Page Number for Logical Page 2
+[PTBR_Process1 + 5] = "00"; // Not referenced and Not Valid
+[PTBR_Process1 + 6] = 30; // Physical Page Number for Logical Page 3
+[PTBR_Process1 + 7] = "01"; // Not referenced and Valid
+
+[READY_LIST + 33] = 1; // STATE is READY
+[READY_LIST + 37] = PTBR_Process1; // PTBR
+[READY_LIST + 38] = 4; // PTLR
+[READY_LIST + 34] = 3*512; // Sets the entry for BP in the PCB
+[READY_LIST + 35] = 3*512; // Sets the entry for SP in the PCB
+[READY_LIST + 36] = 0; // Sets the entry for IP to logical address 0 in the PCB
 
 ireturn;

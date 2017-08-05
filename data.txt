@@ -1,66 +1,60 @@
-There is a plac
-e where the sid
-ewalk ends
+START
 
-And before the 
-street begins,
+MOV SP,
+1535
+MOV BP,
+1535
+PUSH R0
 
-And there the g
-rass grows soft
- and white,
+JMP 00010
 
-And there the s
-un burns crimso
-n bright,
+PUSH BP
 
-And there the m
-oon-bird rests 
-from his flight
+MOV BP,SP
 
+MOV R0,
+1536
+MOV R1,
+2
+MOV [R0],
+R1
+MOV R0,
+1536
+MOV R0,
+[R0]
+MOV R1,
+20
+LE R0,
+R1
+JZ R0,
+00050
+MOV R0,
+1536
+MOV R0,
+[R0]
+OUT R0
 
-To cool in the 
-peppermint wind
-.
+MOV R0,
+1536
+MOV R1,
+1536
+MOV R1,
+[R1]
+MOV R2,
+2
+ADD R1,
+R2
+MOV [R0],
+R1
+JMP 20
 
+MOV R0,
+10
+PUSH R0
 
+INT 7
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+INT 7
 
 
 
