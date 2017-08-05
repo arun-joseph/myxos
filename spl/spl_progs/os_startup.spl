@@ -1,5 +1,9 @@
 load(7,1);
 load(8,2);
+load(9,3);
+load(10,4);
+load(11,5);
+load(12,6);
 load(23,17);
 load(24,18);
 

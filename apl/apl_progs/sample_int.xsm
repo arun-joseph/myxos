@@ -1,0 +1,8 @@
+START
+MOV R0, "Before INT"
+OUT R0
+INT 1
+MOV R0, "After INT"
+OUT R0
+INT 7
+END
