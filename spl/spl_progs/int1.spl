@@ -1,0 +1,71 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+alias filename S2;
+filename = [physicalSP - 3];
+
+if (sysCallNo == 1) then
+	alias FATIndex S3;
+	FATIndex=0;
+
+	while(FATIndex < 64) do
+		if ([FAT + 8*FATIndex] == filename) then
+			[physicalSP - 2]=0;
+			ireturn;
+		endif;
+		FATIndex=FATIndex+1;
+	endwhile;
+
+	alias DFLIndex S4;
+	DFLIndex=24;
+
+	while(DFLIndex < 448) do
+		if ([DISK_LIST + DFLIndex] == 0) then
+			break;
+		endif;
+		DFLIndex=DFLIndex+1;
+	endwhile;
+
+	if(DFLIndex == 448) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	FATIndex=0;
+	while(FATIndex < 64) do
+		if ([FAT + 8*FATIndex + 2] == -1) then
+			break;
+		endif;
+		FATIndex=FATIndex+1;
+	endwhile;
+
+	if (FATIndex == 64) then
+		[physicalSP -2]=-1;
+		ireturn;
+	endif;
+
+	[FAT + 8*FATIndex] = filename;
+	[FAT + 8*FATIndex + 1] = 0;
+	[FAT + 8*FATIndex + 2] = DFLIndex;
+
+	load(1,DFLIndex);
+
+	alias counter S5;
+	counter=0;
+
+	while(counter < 256) do
+		[SCRATCHPAD + counter]=-1;
+		counter=counter+1;
+	endwhile;
+
+	store(1,DFLIndex);
+	[DISK_LIST + DFLIndex]=1;
+	store(5,19);
+	store(6,20);
+	[physicalSP - 2]=0;
+endif;
+
+ireturn;
