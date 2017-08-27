@@ -6,8 +6,22 @@ load(9,3);
 load(10,4);
 load(11,5);
 load(12,6);
+load(13,7);
+load(14,8);
+load(15,9);
+load(16,10);
+load(17,11);
+load(18,12);
 load(23,17);
 load(24,18);
+
+alias counter S0;			
+counter = 0;
+while ( counter <  128) do
+	[FILE_TABLE + counter + 0] = -1;
+	[FILE_TABLE + counter + 1] =  0;
+	counter=counter+2;
+endwhile;	
 
 [READY_LIST + 0] = 0; // Sets the entry for PID as 0 
 
@@ -24,8 +38,14 @@ PTLR = 4;
 [PTBR + 3] = "01"; // Auxiliary Information for Logical Page 1
 [PTBR + 4] = 27; // Physical Page Number for Logical Page 2
 [PTBR + 5] = "01"; // Auxiliary Information for Logical Page 2
-[PTBR + 6] = 28; // Physical Page Number for Logical Page 3 (Stack)
-[PTBR + 7] = "01"; // Auxiliary Information for Logical Page 3 (Stack)
+[PTBR + 6] = 28; // Physical Page Number for Logical Page 3
+[PTBR + 7] = "01"; // Auxiliary Information for Logical Page 3
+
+counter=15;
+while (counter < 31) do
+	[READY_LIST + counter] = -1;
+	counter=counter+1;
+endwhile;
 
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running 
 SP = 3*512;

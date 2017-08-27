@@ -1,0 +1,75 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+alias wordToWrite S2;
+wordToWrite = [physicalSP - 3];
+
+alias fileDescriptor S3;
+fileDescriptor = [physicalSP - 4];
+
+if (sysCallNo == 5) then
+	if ((fileDescriptor < 0) || (fileDescriptor >= 8)) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias currentPID S4;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S5;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias FileIndex S6;
+	FileIndex=[currentPCB + 2*fileDescriptor + 15];
+
+	alias LSEEKpos S7;
+	LSEEKpos=[currentPCB + 2*fileDescriptor + 16];
+
+	if (FileIndex == -1) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias FATIndex S8;
+	FATIndex=[FILE_TABLE + 2*FileIndex];
+
+	alias BasicBlock S9;
+	BasicBlock=[FAT + 8*FATIndex + 2];
+	load(1,BasicBlock);
+
+	alias DFLIndex S10;
+	DFLIndex=[SCRATCHPAD + (LSEEKpos/512)];
+
+	if ((DFLIndex == -1) || (DFLIndex == "")) then
+		DFLIndex=24;
+		while(DFLIndex < 448) do
+			if ([DISK_LIST + DFLIndex] == 0) then
+				[DISK_LIST + DFLIndex]=1;
+				break;
+			endif;
+			DFLIndex=DFLIndex+1;
+		endwhile;
+
+		if (DFLIndex == 448) then
+			[physicalSP - 2]=-1;
+			ireturn;
+		endif;
+
+		[SCRATCHPAD + (LSEEKpos/512)]=DFLIndex;
+		store(1,BasicBlock);
+		[FAT + 8*FATIndex + 1]=[FAT + 8*FATIndex + 1]+512;
+		store(5,19);
+		store(6,20);
+	endif;
+
+	load(1,DFLIndex);
+	[SCRATCHPAD + (LSEEKpos%512)]=wordToWrite;
+	store(1,DFLIndex);
+	[currentPCB + 2*fileDescriptor + 16]=[currentPCB + 2*fileDescriptor + 16]+1;
+	[physicalSP - 2]=0;
+endif;
+
+ireturn;

@@ -29,7 +29,7 @@ if (sysCallNo == 1) then
 		DFLIndex=DFLIndex+1;
 	endwhile;
 
-	if(DFLIndex == 448) then
+	if (DFLIndex == 448) then
 		[physicalSP - 2]=-1;
 		ireturn;
 	endif;
@@ -43,7 +43,7 @@ if (sysCallNo == 1) then
 	endwhile;
 
 	if (FATIndex == 64) then
-		[physicalSP -2]=-1;
+		[physicalSP - 2]=-1;
 		ireturn;
 	endif;
 
@@ -63,6 +63,76 @@ if (sysCallNo == 1) then
 
 	store(1,DFLIndex);
 	[DISK_LIST + DFLIndex]=1;
+	store(5,19);
+	store(6,20);
+	[physicalSP - 2]=0;
+endif;
+
+if (sysCallNo == 4) then
+	alias FATIndex S3;
+	FATIndex=0;
+
+	while(FATIndex < 64) do
+		if ([FAT + 8*FATIndex] == filename) then
+			break;
+		endif;
+		FATIndex=FATIndex+1;
+	endwhile;
+
+	if (FATIndex == 64) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias FileIndex S4;
+	FileIndex=0;
+
+	while(FileIndex < 64) do
+		if ([FILE_TABLE + 2*FileIndex] == FATIndex) then
+			[physicalSP - 2]=-1;
+			ireturn;
+		endif;
+		FileIndex=FileIndex+1;
+	endwhile;
+
+	alias BasicBlock S5;
+	BasicBlock=[FAT + 8*FATIndex + 2];
+
+	alias DataBlock S6;
+	alias BBIndex S7;
+	alias counter S8;
+	BBIndex=0;
+
+	while(BBIndex < 256) do
+		load(1,BasicBlock);
+		DataBlock=[SCRATCHPAD + BBIndex];
+		if ((DataBlock == -1) || (DataBlock == "")) then
+			break;
+		endif;
+		load(1,DataBlock);
+		counter=0;
+		while(counter < 512) do
+			[SCRATCHPAD + counter]="";
+			counter=counter+1;
+		endwhile;
+		store(1,DataBlock);
+		[DISK_LIST + DataBlock]=0;
+		BBIndex=BBIndex+1;
+	endwhile;
+
+	load(1,BasicBlock);
+	BBIndex=0;
+	while(BBIndex < 256) do
+		[SCRATCHPAD + BBIndex]="";
+		BBIndex=BBIndex+1;
+	endwhile;
+	store(1,BasicBlock);
+	[DISK_LIST + BasicBlock]=0;
+
+	[FAT + 8*FATIndex]=-1;
+	[FAT + 8*FATIndex + 1]=0;
+	[FAT + 8*FATIndex + 2]=-1;
+
 	store(5,19);
 	store(6,20);
 	[physicalSP - 2]=0;

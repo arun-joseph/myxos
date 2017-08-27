@@ -1,0 +1,113 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+if (sysCallNo == 2) then
+	alias filename S2;
+	filename = [physicalSP - 3];
+
+	alias FATIndex S3;
+	FATIndex=0;
+
+	while(FATIndex < 64) do
+		if ([FAT + 8*FATIndex] == filename) then
+			break;
+		endif;
+		FATIndex=FATIndex+1;
+	endwhile;
+
+	if (FATIndex == 64) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias FileIndex S4;
+	FileIndex=0;
+
+	while(FileIndex < 64) do
+		if ([FILE_TABLE + 2*FileIndex] == FATIndex) then
+			break;
+		endif;
+		FileIndex=FileIndex+1;
+	endwhile;
+
+	if (FileIndex == 64) then
+		FileIndex=0;
+		while(FileIndex < 64) do
+			if ([FILE_TABLE + 2*FileIndex] == -1) then
+				break;
+			endif;
+			FileIndex=FileIndex+1;
+		endwhile;
+
+		if (FileIndex == 64) then
+			[physicalSP -2]=-1;
+			ireturn;
+		endif;
+	endif;
+
+	alias currentPID S5;
+	currentPID = (PTBR - 1024)/8;
+
+	alias currentPCB S6;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias fileDescriptor S7;
+	fileDescriptor=0;
+
+	while(fileDescriptor < 8) do
+		if ([currentPCB + 2*fileDescriptor + 15] == -1) then
+			[currentPCB + 2*fileDescriptor + 15]=FileIndex;
+			[currentPCB + 2*fileDescriptor + 16]=0;
+			break;
+		endif;
+		fileDescriptor=fileDescriptor+1;
+	endwhile;
+
+	if (fileDescriptor == 8) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	[FILE_TABLE + 2*FileIndex]=FATIndex;
+	[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]+1;
+	[physicalSP - 2]=fileDescriptor;
+endif;
+
+if (sysCallNo == 3) then
+	alias fileDescriptor S2;
+	fileDescriptor = [physicalSP - 3];
+
+	if ((fileDescriptor < 0) || (fileDescriptor >= 8)) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias currentPID S3;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S4;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias FileIndex S5;
+	FileIndex=[currentPCB + 2*fileDescriptor + 15];
+
+	if (FileIndex == -1) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]-1;
+
+	if ([FILE_TABLE + 2*FileIndex + 1] == 0) then
+		[FILE_TABLE + 2*FileIndex]=-1;
+	endif;
+
+	[currentPCB + 2*fileDescriptor + 15]=-1;
+	[currentPCB + 2*fileDescriptor + 16]=-1;
+	[physicalSP - 2]=0;
+endif;
+
+ireturn;
