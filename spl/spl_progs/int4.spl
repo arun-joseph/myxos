@@ -33,6 +33,11 @@ if (sysCallNo == 5) then
 		ireturn;
 	endif;
 
+	if ((LSEEKpos/512) >= 256) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
 	alias FATIndex S8;
 	FATIndex=[FILE_TABLE + 2*FileIndex];
 

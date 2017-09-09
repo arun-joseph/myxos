@@ -1,0 +1,129 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+if (sysCallNo == 8) then
+	alias currentPID S2;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S3;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias newPID S4;
+	newPID=0;
+	while(newPID < 32) do
+		if ([READY_LIST + 32*newPID + 1] == 0) then
+			break;
+		endif;
+		newPID=newPID+1;
+	endwhile;
+
+	if (newPID == 32) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias newPCB S5;
+	newPCB=READY_LIST+32*newPID;
+	[newPCB]=newPID;
+
+	alias counter S6;
+	alias validPages S7;
+
+	counter=0;
+	validPages=0;
+	while(counter < PTLR) do
+		if (([PTBR + 2*counter + 1] == "01") || ([PTBR + 2*counter + 1] == "11")) then
+			validPages=validPages+1;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	alias freePages S8;
+	freePages=0;
+	counter=0;
+	while(counter < 64) do
+		if ([MEM_LIST + counter] == 0) then
+			freePages=freePages+1;
+		endif;
+		if (freePages == validPages) then
+			break;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	if (freePages < validPages) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias newPTBR S9;
+	newPTBR=PAGE_TABLE + 8*newPID;
+
+	alias pageIndex S10;
+	pageIndex=0;
+	alias freePageIndex S11;
+	freePageIndex=0;
+
+	while(pageIndex < PTLR) do
+		if ([PTBR + 2*pageIndex + 1] == "00") then
+			[newPTBR + 2*pageIndex]=[PTBR + 2*pageIndex];
+			[newPTBR + 2*pageIndex + 1]="00";
+			pageIndex=pageIndex+1;
+			continue;
+		endif;
+
+		while([MEM_LIST + freePageIndex] == 1) do
+			freePageIndex=freePageIndex+1;
+		endwhile;
+
+		[MEM_LIST + freePageIndex]=1;
+		counter=0;
+		while(counter < 512) do
+			[512*freePageIndex + counter]=[512*[PTBR + 2*pageIndex] + counter];
+			counter=counter+1;
+		endwhile;
+
+		[newPTBR + 2*pageIndex]=freePageIndex;
+		[newPTBR + 2*pageIndex + 1]=[PTBR + 2*pageIndex + 1];
+		pageIndex=pageIndex+1;
+	endwhile;
+
+	[newPCB + 2]=BP;
+	[newPCB + 3]=SP-1;
+	[newPCB + 4]=[physicalSP];
+	[newPCB + 5]=newPTBR;
+	[newPCB + 6]=PTLR;
+	[newPCB + 7]=R0;
+	[newPCB + 8]=R1;
+	[newPCB + 9]=R2;
+	[newPCB + 10]=R3;
+	[newPCB + 11]=R4;
+	[newPCB + 12]=R5;
+	[newPCB + 13]=R6;
+	[newPCB + 14]=R7;
+
+	alias FileIndex S12;
+	counter=0;
+	while(counter < 8) do
+		[newPCB + 2*counter + 15]=[currentPCB + 2*counter + 15];
+		[newPCB + 2*counter + 16]=[currentPCB + 2*counter + 16];
+		FileIndex=[newPCB + 2*counter + 15];
+
+		if (FileIndex != -1) then
+			[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]+1;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	[newPCB + 1]=1;
+	[physicalSP - 2]=newPID;
+
+	alias newPhysicalSP S13;
+	newPhysicalSP=([newPTBR + 2*((SP-1)/512)]*512) + ((SP-1)%512);
+	[newPhysicalSP - 1]=-2;
+endif;
+
+ireturn;

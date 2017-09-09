@@ -1,0 +1,142 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+alias filename S2;
+filename = [physicalSP - 3];
+
+if (sysCallNo == 9) then
+	alias FATIndex S3;
+	FATIndex=0;
+
+	while(FATIndex < 64) do
+		if ([FAT + 8*FATIndex] == filename) then
+			break;
+		endif;
+		FATIndex=FATIndex+1;
+	endwhile;
+
+	if (FATIndex == 64) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias BasicBlock S4;
+	BasicBlock=[FAT + 8*FATIndex + 2];
+	load(1,BasicBlock);
+
+	alias newBlocks S5;
+	alias DataBlock S6;
+	newBlocks=0;
+	while(newBlocks < 256) do
+		DataBlock=[SCRATCHPAD + newBlocks];
+		if ((DataBlock == -1) || (DataBlock == "")) then
+			break;
+		endif;
+		newBlocks=newBlocks+1;
+	endwhile;
+
+	if (newBlocks >= PTLR) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias counter S7;
+	counter=0;
+	alias validPages S8;
+	validPages=0;
+	while(counter < (PTLR - 1)) do
+		DataBlock=[PTBR + 2*counter + 1];
+		if ((DataBlock == "01") || (DataBlock == "11")) then
+			validPages=validPages+1;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	alias freePages S9;
+	freePages=0;
+	counter=0;
+	while(counter < 64) do
+		if ([MEM_LIST + counter] == 0) then
+			freePages=freePages+1;
+		endif;
+		if (freePages >= (newBlocks - validPages)) then
+			break;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	if (freePages < (newBlocks - validPages)) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	alias freePageIndex S10;
+	freePageIndex=0;
+	counter=0;
+	while(counter < (PTLR - 1)) do
+		newBlocks=[SCRATCHPAD + counter];
+		DataBlock=[PTBR + 2*counter];
+		validPages=[PTBR + 2*counter + 1];
+
+		if ((validPages == "01") || (validPages == "11")) then
+			if ((newBlocks == -1) || (newBlocks == "")) then
+				[MEM_LIST + DataBlock]=0;
+				[PTBR + 2*counter]=-1;
+				[PTBR + 2*counter + 1]="00";
+			else
+				load(DataBlock,newBlocks);
+				[PTBR + 2*counter + 1]="01";
+			endif;
+		else
+			if ((newBlocks == -1) || (newBlocks == "")) then
+				[PTBR + 2*counter]=-1;
+				[PTBR + 2*counter + 1]="00";
+			else
+				while([MEM_LIST + freePageIndex] == 1) do
+					freePageIndex=freePageIndex+1;
+				endwhile;
+				load(freePageIndex,newBlocks);
+				[MEM_LIST + freePageIndex]=1;
+				[PTBR + 2*counter]=freePageIndex;
+				[PTBR + 2*counter + 1]="01";
+			endif;
+		endif;
+		counter=counter+1;
+	endwhile;
+
+	alias currentPID S11;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S12;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias fileDescriptor S13;
+	alias FileIndex S14;
+	fileDescriptor=0;
+	while(fileDescriptor < 8) do
+		FileIndex=[currentPCB + 2*fileDescriptor + 15];
+
+		if (FileIndex == -1) then
+			fileDescriptor=fileDescriptor+1;
+			continue;
+		endif;
+
+		[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]-1;
+		if ([FILE_TABLE + 2*FileIndex + 1] == 0) then
+			[FILE_TABLE + 2*FileIndex]=-1;
+		endif;
+
+		[currentPCB + 2*fileDescriptor + 15]=-1;
+		[currentPCB + 2*fileDescriptor + 16]=-1;
+		fileDescriptor=fileDescriptor+1;
+	endwhile;
+
+	SP=3*512;
+	physicalSP=([PTBR + 2*(SP/512)]*512) + (SP%512);
+	[physicalSP]=0;
+endif;
+
+ireturn;

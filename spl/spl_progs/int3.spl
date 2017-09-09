@@ -36,7 +36,7 @@ if (sysCallNo == 6) then
 	alias filesize S8;
 	filesize=[FAT + 8*FATIndex + 1];
 
-	if ((newLseek < 0) || (newLseek >= filesize)) then
+	if ((newLseek < 0) || (newLseek > filesize)) then
 		[physicalSP - 2]=-1;
 		ireturn;
 	endif;

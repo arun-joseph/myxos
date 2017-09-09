@@ -1,0 +1,98 @@
+alias physicalSP S0;
+physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+alias sysCallNo S1;
+sysCallNo = [physicalSP - 1];
+
+if (sysCallNo == 10) then
+	alias currentPID S2;
+	alias currentPCB S3;
+
+	currentPID=0;
+	while(currentPID < 32) do
+		currentPCB=READY_LIST + 32*currentPID;
+		if ([currentPCB + 1] == 1) then
+			break;
+		endif;
+		currentPID=currentPID+1;
+	endwhile;
+
+	if (currentPID == 32) then
+		halt;
+	endif;
+
+	currentPID=(PTBR - 1024)/8;
+	currentPCB=READY_LIST + 32*currentPID;
+
+	alias fileDescriptor S4;
+	alias FileIndex S5;
+	fileDescriptor=0;
+	while(fileDescriptor < 8) do
+		FileIndex=[currentPCB + 2*fileDescriptor + 15];
+
+		if (FileIndex == -1) then
+			fileDescriptor=fileDescriptor+1;
+			continue;
+		endif;
+
+		[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]-1;
+		if ([FILE_TABLE + 2*FileIndex + 1] == 0) then
+			[FILE_TABLE + 2*FileIndex]=-1;
+		endif;
+
+		[currentPCB + 2*fileDescriptor + 15]=-1;
+		[currentPCB + 2*fileDescriptor + 16]=-1;
+		fileDescriptor=fileDescriptor+1;
+	endwhile;
+
+	[currentPCB + 1]=0;
+
+	alias counter S6;
+	alias DataBlock S7;
+	counter=0;
+	while(counter < PTLR) do
+		DataBlock=[PTBR + 2*counter];
+		if (DataBlock == -1) then
+			counter=counter+1;
+			continue;
+		endif;
+		[MEM_LIST + DataBlock]=0;
+		[PTBR + 2*counter]=-1;
+		[PTBR + 2*counter + 1]="00";
+		counter=counter+1;
+	endwhile;
+
+	alias newPID S8;
+	newPID = currentPID + 1;
+	alias newPCB S9;
+	while(1) do
+		if (newPID == 32) then
+			newPID=0;
+		endif;
+		newPCB = READY_LIST + 32*newPID;
+		if ([newPCB + 1] == 1) then
+			break;
+		endif;
+		newPID = newPID+1;
+	endwhile;
+
+	BP = [newPCB + 2];
+	SP = [newPCB + 3];
+	PTBR = [newPCB + 5];
+	PTLR = [newPCB + 6];
+	R0 = [newPCB + 7];
+	R1 = [newPCB + 8];
+	R2 = [newPCB + 9];
+	R3 = [newPCB + 10];
+	R4 = [newPCB + 11];
+	R5 = [newPCB + 12];
+	R6 = [newPCB + 13];
+	R7 = [newPCB + 14];
+
+	SP = SP + 1;
+	physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
+	[physicalSP] = [newPCB + 4];
+	[newPCB + 1] = 2;
+endif;
+
+ireturn;

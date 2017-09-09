@@ -1,27 +1,48 @@
-load(5,19);
-load(6,20);
-load(7,1);
+load(5,19); // File Allocation Table
+load(6,20); // Disk Free List
+load(7,1); // Exception Handler
 load(8,2);
-load(9,3);
+load(9,3); // Timer Interrupt Routine
 load(10,4);
-load(11,5);
+load(11,5); // Interrupt 1 Routine
 load(12,6);
-load(13,7);
+load(13,7); // Interrupt 2 Routine
 load(14,8);
-load(15,9);
+load(15,9); // Interrupt 3 Routine
 load(16,10);
-load(17,11);
+load(17,11); // Interrupt 4 Routine
 load(18,12);
-load(23,17);
+load(19,13); // Interrupt 5 Routine
+load(20,14);
+load(21,15); // Interrupt 6 Routine
+load(22,16);
+load(23,17); // Interrupt 7 Routine
 load(24,18);
 
-alias counter S0;			
+alias counter S0;
+
 counter = 0;
-while ( counter <  128) do
+while (counter <= 28) do
+	[MEM_LIST + counter] = 1;
+	counter=counter+1;
+endwhile;
+while (counter < 64) do
+	[MEM_LIST + counter] = 0;
+	counter=counter+1;
+endwhile;
+			
+counter = 0;
+while (counter <  128) do
 	[FILE_TABLE + counter + 0] = -1;
 	[FILE_TABLE + counter + 1] =  0;
 	counter=counter+2;
 endwhile;	
+
+counter = 0;
+while (counter < 32) do
+	[READY_LIST + 32*counter + 1] = 0;
+	counter=counter+1;
+endwhile;
 
 [READY_LIST + 0] = 0; // Sets the entry for PID as 0 
 
