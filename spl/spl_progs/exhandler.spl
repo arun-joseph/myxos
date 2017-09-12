@@ -1,0 +1,120 @@
+alias Cause S0;
+alias BadVAddr S1;
+alias Ip_addr S2;
+alias VPagenum S3;
+
+Cause = EFR%10;		// Gets value of cause field
+BadVAddr = (EFR/10)%100;    // Gets value of BadVAddr 
+Ip_addr = (EFR/1000);		//Gets value of IP at the point of exception
+VPagenum = [PTBR + 2*BadVAddr];
+
+alias physicalSP S4;
+physicalSP=([PTBR + 2*(SP/512)]*512) + (SP%512);
+
+breakpoint;
+
+if (Cause != 0) then
+	if (Cause == 1) then
+		print("Illegal instruction");
+	endif;
+	if (Cause == 2) then
+		print("Illegal memory access");
+	endif;
+	if (Cause == 3) then
+		print("Arithmetic exception");
+	endif;
+	if (Cause == 4) then
+		print("Illegal operands");
+	endif;
+	SP=SP+2;
+	[physicalSP + 1]=10;
+	inline "JMP 11776";
+endif;
+
+alias freePageIndex S5;
+if (VPagenum == -1) then
+	SP=SP+2;
+	[physicalSP + 1]=10;
+	inline "JMP 11776";
+endif;
+
+freePageIndex=0;
+while(freePageIndex < 64) do
+	if ([MEM_LIST + freePageIndex] == 0) then
+		[MEM_LIST + freePageIndex]=1;
+		break;
+	endif;
+	freePageIndex=freePageIndex+1;
+endwhile;
+
+alias pageIndex S6;
+alias DataBlock S7;
+pageIndex=PTBR - PAGE_TABLE + 2*BadVAddr + 2;
+if (freePageIndex == 64) then
+	while(1) do
+		if (pageIndex >= 256) then
+			pageIndex=pageIndex-256;
+		endif;
+
+		if ((pageIndex % 8) == 6) then
+			pageIndex=pageIndex+2;
+			continue;
+		endif;
+
+		if ([PAGE_TABLE + pageIndex + 1] == "01") then
+			if ([MEM_LIST + [PAGE_TABLE + pageIndex]] > 1) then
+				pageIndex=pageIndex+2;
+				continue;
+			endif;
+
+			DataBlock=448;
+			while(DataBlock < 512) do
+				if ([DISK_LIST + DataBlock] == 0) then
+					break;
+				endif;
+				DataBlock=DataBlock+1;
+			endwhile;
+
+			if (DataBlock == 512) then
+				SP=SP+2;
+				[physicalSP + 1]=10;
+				inline "JMP 11776";
+			endif;
+
+			store([PAGE_TABLE + pageIndex],DataBlock);
+			[DISK_LIST + DataBlock]=1;
+			store(6,20);
+
+			freePageIndex=[PAGE_TABLE + pageIndex];
+			[PAGE_TABLE + pageIndex]=DataBlock;
+			[PAGE_TABLE + pageIndex + 1]="00";
+			break;
+		endif;
+
+		if ([PAGE_TABLE + pageIndex + 1] == "11") then
+			[PAGE_TABLE + pageIndex + 1]="01";
+		endif;
+
+		pageIndex=pageIndex+2;
+	endwhile;
+endif;
+
+if ((VPagenum > 20) && (VPagenum < 448)) then
+	load(freePageIndex, VPagenum);
+endif;
+
+if (VPagenum >= 448) then
+	load(freePageIndex, VPagenum);
+	[DISK_LIST + VPagenum]=[DISK_LIST + VPagenum]-1;
+	store(6,20);
+endif;
+
+[PTBR + 2*BadVAddr]=freePageIndex;
+[PTBR + 2*BadVAddr + 1]="11";
+
+SP=SP+1;
+[physicalSP + 1]=Ip_addr;
+
+breakpoint;
+
+ireturn;

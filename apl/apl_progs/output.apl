@@ -14,7 +14,8 @@ integer main()
 
 	status=Close(fp);
 
-	status=Delete("input.dat");
-	status=Delete("output.dat");
+	status=Delete("input1.dat");
+	status=Delete("input2.dat");
+
 	return 0;
 }

@@ -3,7 +3,11 @@ decl
 enddecl
 integer main()
 {
-	status=Create("input.dat");
+	status=Delete("input1.dat");
+	status=Delete("input2.dat");
+	status=Delete("output.dat");
+	status=Create("input1.dat");
+	status=Create("input2.dat");
 	status=Create("output.dat");
 
 	pid=Fork();

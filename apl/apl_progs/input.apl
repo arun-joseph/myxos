@@ -3,21 +3,25 @@ decl
 enddecl
 integer main()
 {
-	integer fp;
-	fp=Open("input.dat");
-	status=Write(fp,10);
-	status=Write(fp,8);
-	status=Write(fp,6);
-	status=Write(fp,4);
-	status=Write(fp,5);
-	status=Write(fp,9);
-	status=Write(fp,7);
-	status=Write(fp,2);
-	status=Write(fp,1);
-	status=Write(fp,3);
-	status=Write(fp,7);
-	status=Write(fp,0);
-	status=Close(fp);
+	integer f1,f2,i;
+
+	f1=Open("input1.dat");
+	i=20;
+	while(i <= 60) do
+		status=Write(f1, i);
+		i=i+5;
+	endwhile;
+	status=Write(f1, 0);
+	status=Close(f1);
+
+	f2=Open("input2.dat");
+	i=1;
+	while(i < 40) do
+		status=Write(f2, i);
+		i=i+2;
+	endwhile;
+	status=Write(f2, 0);
+	status=Close(f2);
 
 	status=Exec("program.xsm");
 	return 0;

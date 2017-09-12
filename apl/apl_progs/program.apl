@@ -3,49 +3,38 @@ decl
 enddecl
 integer main()
 {
-	integer a,b,i,f1,f2;
-	f1=Open("input.dat");
-	f2=Open("output.dat");
+	integer a,b,f1,f2,fp;
+	f1=Open("input1.dat");
+	f2=Open("input2.dat");
+	fp=Open("output.dat");
 
-	length=1;
-	status=Read(f1,a);
-	if(a != 0) then	
-		status=Seek(f1,0);
-		status=Read(f1,a);
-		status=Write(f2,a);
-		status=Seek(f1,length);
-		status=Read(f1,a);
-	endif;
-
-	while(a != 0) do
-		status=Seek(f2,length-1);
-		status=Read(f2,b);
-
-		i=length-1;
-		while((i >= 0) && (b > a)) do
-			status=Seek(f2,i+1);
-			status=Write(f2,b);
-			i=i-1;
-
-			if(i >= 0) then
-				status=Seek(f2,i);
-				status=Read(f2,b);
-			endif;
-		endwhile;
-
-		status=Seek(f2,i+1);
-		status=Write(f2,a);
-
-		length=length+1;
-		status=Seek(f1,length);
-		status=Read(f1,a);
+	status=Read(f1, a);
+	status=Read(f2, b);
+	while((a != 0) && (b != 0)) do
+		if (a <= b) then
+			status=Write(fp, a);
+			status=Read(f1, a);
+		else
+			status=Write(fp, b);
+			status=Read(f2, b);
+		endif;
 	endwhile;
 
-	status=Seek(f2,length);
+	while(a != 0) do
+		status=Write(fp, a);
+		status=Read(f1, a);
+	endwhile;
+
+	while(b != 0) do
+		status=Write(fp, b);
+		status=Read(f2, b);
+	endwhile;
+
 	status=Write(f2,0);
 
 	status=Close(f1);
 	status=Close(f2);
+	status=Close(fp);
 
 	status=Exec("output.xsm");
 	return 0;

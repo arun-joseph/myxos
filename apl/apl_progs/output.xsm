@@ -98,7 +98,7 @@ POP R1
 POP R2
 MOV [R0], R1
 MOV R0, 1536
-MOV R1, "input.dat"
+MOV R1, "input1.dat"
 PUSH R1
 PUSH R0
 MOV R1, 4
@@ -109,7 +109,7 @@ POP R1
 POP R2
 MOV [R0], R1
 MOV R0, 1536
-MOV R1, "output.dat"
+MOV R1, "input2.dat"
 PUSH R1
 PUSH R0
 MOV R1, 4

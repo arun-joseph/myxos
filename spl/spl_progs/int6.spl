@@ -45,67 +45,23 @@ if (sysCallNo == 9) then
 
 	alias counter S7;
 	counter=0;
-	alias validPages S8;
-	validPages=0;
 	while(counter < (PTLR - 1)) do
-		DataBlock=[PTBR + 2*counter + 1];
-		if ((DataBlock == "01") || (DataBlock == "11")) then
-			validPages=validPages+1;
-		endif;
-		counter=counter+1;
-	endwhile;
-
-	alias freePages S9;
-	freePages=0;
-	counter=0;
-	while(counter < 64) do
-		if ([MEM_LIST + counter] == 0) then
-			freePages=freePages+1;
-		endif;
-		if (freePages >= (newBlocks - validPages)) then
-			break;
-		endif;
-		counter=counter+1;
-	endwhile;
-
-	if (freePages < (newBlocks - validPages)) then
-		[physicalSP - 2]=-1;
-		ireturn;
-	endif;
-
-	alias freePageIndex S10;
-	freePageIndex=0;
-	counter=0;
-	while(counter < (PTLR - 1)) do
-		newBlocks=[SCRATCHPAD + counter];
 		DataBlock=[PTBR + 2*counter];
-		validPages=[PTBR + 2*counter + 1];
-
-		if ((validPages == "01") || (validPages == "11")) then
-			if ((newBlocks == -1) || (newBlocks == "")) then
-				[MEM_LIST + DataBlock]=0;
-				[PTBR + 2*counter]=-1;
-				[PTBR + 2*counter + 1]="00";
-			else
-				load(DataBlock,newBlocks);
-				[PTBR + 2*counter + 1]="01";
-			endif;
+		newBlocks=[SCRATCHPAD + counter];
+		if (([PTBR + 2*counter + 1] == "01") || ([PTBR + 2*counter + 1] == "11")) then
+			[MEM_LIST + DataBlock]=[MEM_LIST + DataBlock]-1;
 		else
-			if ((newBlocks == -1) || (newBlocks == "")) then
-				[PTBR + 2*counter]=-1;
-				[PTBR + 2*counter + 1]="00";
-			else
-				while([MEM_LIST + freePageIndex] == 1) do
-					freePageIndex=freePageIndex+1;
-				endwhile;
-				load(freePageIndex,newBlocks);
-				[MEM_LIST + freePageIndex]=1;
-				[PTBR + 2*counter]=freePageIndex;
-				[PTBR + 2*counter + 1]="01";
+			if (DataBlock >= 448) then
+				[DISK_LIST + DataBlock]=[DISK_LIST + DataBlock]-1;
+				store(6,20);
 			endif;
 		endif;
+		[PTBR + 2*counter]=newBlocks;
+		[PTBR + 2*counter + 1]="00";
 		counter=counter+1;
 	endwhile;
+
+	[PTBR + 2*counter + 1]="01";
 
 	alias currentPID S11;
 	currentPID = (PTBR - 1024)/8;

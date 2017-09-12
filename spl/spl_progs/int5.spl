@@ -29,65 +29,50 @@ if (sysCallNo == 8) then
 	newPCB=READY_LIST+32*newPID;
 	[newPCB]=newPID;
 
-	alias counter S6;
-	alias validPages S7;
-
-	counter=0;
-	validPages=0;
-	while(counter < PTLR) do
-		if (([PTBR + 2*counter + 1] == "01") || ([PTBR + 2*counter + 1] == "11")) then
-			validPages=validPages+1;
-		endif;
-		counter=counter+1;
-	endwhile;
-
-	alias freePages S8;
-	freePages=0;
-	counter=0;
-	while(counter < 64) do
-		if ([MEM_LIST + counter] == 0) then
-			freePages=freePages+1;
-		endif;
-		if (freePages == validPages) then
+	alias freePageIndex S6;
+	freePageIndex=0;
+	while(freePageIndex < 64) do
+		if ([MEM_LIST + freePageIndex] == 0) then
+			[MEM_LIST + freePageIndex]=1;
 			break;
 		endif;
-		counter=counter+1;
+		freePageIndex=freePageIndex+1;
 	endwhile;
 
-	if (freePages < validPages) then
+	if (freePageIndex == 64) then
 		[physicalSP - 2]=-1;
 		ireturn;
 	endif;
 
-	alias newPTBR S9;
+	alias newPTBR S7;
 	newPTBR=PAGE_TABLE + 8*newPID;
 
-	alias pageIndex S10;
+	alias counter S8;
+	alias pageIndex S9;
+	counter=0;
+	pageIndex=PTLR-1;
+	while(counter < 512) do
+		[512*freePageIndex + counter]=[512*[PTBR + 2*pageIndex] + counter];
+		counter=counter+1;
+	endwhile;
+
+	[newPTBR + 2*pageIndex]=freePageIndex;
+	[newPTBR + 2*pageIndex + 1]="01";
+
+	alias DataBlock S10;
 	pageIndex=0;
-	alias freePageIndex S11;
-	freePageIndex=0;
-
-	while(pageIndex < PTLR) do
-		if ([PTBR + 2*pageIndex + 1] == "00") then
-			[newPTBR + 2*pageIndex]=[PTBR + 2*pageIndex];
-			[newPTBR + 2*pageIndex + 1]="00";
-			pageIndex=pageIndex+1;
-			continue;
-		endif;
-
-		while([MEM_LIST + freePageIndex] == 1) do
-			freePageIndex=freePageIndex+1;
-		endwhile;
-
-		[MEM_LIST + freePageIndex]=1;
-		counter=0;
-		while(counter < 512) do
-			[512*freePageIndex + counter]=[512*[PTBR + 2*pageIndex] + counter];
-			counter=counter+1;
-		endwhile;
-
-		[newPTBR + 2*pageIndex]=freePageIndex;
+	while(pageIndex < (PTLR - 1)) do
+		DataBlock=[PTBR + 2*pageIndex];
+		[newPTBR + 2*pageIndex]=[PTBR + 2*pageIndex];
 		[newPTBR + 2*pageIndex + 1]=[PTBR + 2*pageIndex + 1];
+		if (([PTBR + 2*pageIndex + 1] == "01") || ([PTBR + 2*pageIndex + 1] == "11")) then
+			[MEM_LIST + DataBlock]=[MEM_LIST + DataBlock]+1;
+		else
+			if (DataBlock >= 448) then
+				[DISK_LIST + DataBlock]=[DISK_LIST + DataBlock]+1;
+				store(6,20);
+			endif;
+		endif;
 		pageIndex=pageIndex+1;
 	endwhile;
 
@@ -105,7 +90,7 @@ if (sysCallNo == 8) then
 	[newPCB + 13]=R6;
 	[newPCB + 14]=R7;
 
-	alias FileIndex S12;
+	alias FileIndex S11;
 	counter=0;
 	while(counter < 8) do
 		[newPCB + 2*counter + 15]=[currentPCB + 2*counter + 15];
@@ -121,7 +106,7 @@ if (sysCallNo == 8) then
 	[newPCB + 1]=1;
 	[physicalSP - 2]=newPID;
 
-	alias newPhysicalSP S13;
+	alias newPhysicalSP S12;
 	newPhysicalSP=([newPTBR + 2*((SP-1)/512)]*512) + ((SP-1)%512);
 	[newPhysicalSP - 1]=-2;
 endif;
