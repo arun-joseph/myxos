@@ -36,6 +36,7 @@ integer main()
 	status=Close(f2);
 	status=Close(fp);
 
-	status=Exec("output.xsm");
+	status=Signal();
+	Exit();
 	return 0;
 }

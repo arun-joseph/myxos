@@ -104,6 +104,7 @@ if (sysCallNo == 8) then
 	endwhile;
 
 	[newPCB + 1]=1;
+	[newPCB + 31]=currentPID;
 	[physicalSP - 2]=newPID;
 
 	alias newPhysicalSP S12;

@@ -4,10 +4,10 @@ physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 alias sysCallNo S1;
 sysCallNo = [physicalSP - 1];
 
-alias filename S2;
-filename = [physicalSP - 3];
-
 if (sysCallNo == 9) then
+	alias filename S2;
+	filename = [physicalSP - 3];
+
 	alias FATIndex S3;
 	FATIndex=0;
 
@@ -93,6 +93,23 @@ if (sysCallNo == 9) then
 	SP=3*512;
 	physicalSP=([PTBR + 2*(SP/512)]*512) + (SP%512);
 	[physicalSP]=0;
+endif;
+
+if (sysCallNo == 11) then
+	alias currentPID S2;
+	currentPID = (PTBR - 1024)/8;
+
+	[physicalSP - 2]=currentPID;
+endif;
+
+if (sysCallNo == 12) then
+	alias currentPID S2;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S3;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	[physicalSP - 2]=[currentPCB + 31];
 endif;
 
 ireturn;

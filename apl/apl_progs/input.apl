@@ -23,6 +23,7 @@ integer main()
 	status=Write(f2, 0);
 	status=Close(f2);
 
-	status=Exec("program.xsm");
+	status=Signal();
+	Exit();
 	return 0;
 }

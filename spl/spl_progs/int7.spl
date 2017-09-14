@@ -4,9 +4,27 @@ physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 alias sysCallNo S1;
 sysCallNo = [physicalSP - 1];
 
+breakpoint;
+
 if (sysCallNo == 10) then
 	alias currentPID S2;
+	currentPID=(PTBR - 1024)/8;
+
 	alias currentPCB S3;
+	currentPCB=READY_LIST + 32*currentPID;
+
+	alias newPID S4;
+	newPID = 0;
+	alias newPCB S5;
+	while(newPID < 32) do
+		newPCB = READY_LIST + 32*newPID;
+		if ([newPCB + 1] == (100 + currentPID)) then
+			[newPCB + 1]=1;
+		endif;
+		newPID = newPID + 1;
+	endwhile;
+
+	breakpoint;
 
 	currentPID=0;
 	while(currentPID < 32) do
@@ -21,11 +39,13 @@ if (sysCallNo == 10) then
 		halt;
 	endif;
 
+	breakpoint;
+
 	currentPID=(PTBR - 1024)/8;
 	currentPCB=READY_LIST + 32*currentPID;
 
-	alias fileDescriptor S4;
-	alias FileIndex S5;
+	alias fileDescriptor S6;
+	alias FileIndex S7;
 	fileDescriptor=0;
 	while(fileDescriptor < 8) do
 		FileIndex=[currentPCB + 2*fileDescriptor + 15];
@@ -45,10 +65,12 @@ if (sysCallNo == 10) then
 		fileDescriptor=fileDescriptor+1;
 	endwhile;
 
+	breakpoint;
+
 	[currentPCB + 1]=0;
 
-	alias counter S6;
-	alias DataBlock S7;
+	alias counter S8;
+	alias DataBlock S9;
 	counter=0;
 	while(counter < PTLR) do
 		DataBlock=[PTBR + 2*counter];
@@ -64,10 +86,77 @@ if (sysCallNo == 10) then
 		[PTBR + 2*counter + 1]="00";
 		counter=counter+1;
 	endwhile;
+endif;
 
-	alias newPID S8;
+if (sysCallNo == 13) then
+	alias WaitingPID S2;
+	WaitingPID=[physicalSP - 3];
+
+	alias WaitingPCB S3;
+	WaitingPCB = READY_LIST + 32*WaitingPID;
+
+	alias currentPID S4;
+	currentPID = (PTBR - 1024)/8;
+
+	alias currentPCB S5;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	if ((WaitingPID < 0) || (WaitingPID >= 32)) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	if ((WaitingPID == currentPID) || ([WaitingPCB + 1] == 0)) then
+		[physicalSP - 2]=-1;
+		ireturn;
+	endif;
+
+	[currentPCB + 1] = 100 + WaitingPID;
+	[currentPCB + 2] = BP;
+	[currentPCB + 3] = SP-1;
+	[currentPCB + 4] = [physicalSP];
+	[currentPCB + 5] = PTBR;
+	[currentPCB + 6] = PTLR;
+	[currentPCB + 7] = R0;
+	[currentPCB + 8] = R1;
+	[currentPCB + 9] = R2;
+	[currentPCB + 10] = R3;
+	[currentPCB + 11] = R4;
+	[currentPCB + 12] = R5;
+	[currentPCB + 13] = R6;
+	[currentPCB + 14] = R7;
+
+	[physicalSP - 2]=0;
+endif;
+
+if (sysCallNo == 14) then
+	alias currentPID S2;
+	currentPID = (PTBR - 1024)/8;
+
+	alias newPID S3;
+	newPID = 0;
+	alias newPCB S4;
+	while(newPID < 32) do
+		newPCB = READY_LIST + 32*newPID;
+		if ([newPCB + 1] == (100 + currentPID)) then
+			[newPCB + 1]=1;
+		endif;
+		newPID = newPID + 1;
+	endwhile;
+
+	[physicalSP - 2]=0;
+endif;
+
+if ((sysCallNo == 10) || (sysCallNo == 13)) then
+	alias currentPID S2;
+	currentPID = (PTBR - 1024)/8;
+	
+	alias currentPCB S3;
+	currentPCB = READY_LIST + 32*currentPID;
+
+	alias newPID S6;
 	newPID = currentPID + 1;
-	alias newPCB S9;
+	alias newPCB S7;
 	while(1) do
 		if (newPID == 32) then
 			newPID=0;
@@ -97,5 +186,7 @@ if (sysCallNo == 10) then
 	[physicalSP] = [newPCB + 4];
 	[newPCB + 1] = 2;
 endif;
+
+breakpoint;
 
 ireturn;

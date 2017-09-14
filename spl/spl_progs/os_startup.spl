@@ -70,6 +70,7 @@ while (counter < 31) do
 	[READY_LIST + counter] = -1;
 	counter=counter+1;
 endwhile;
+[READY_LIST + 31]=0;
 
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running 
 SP = 3*512;

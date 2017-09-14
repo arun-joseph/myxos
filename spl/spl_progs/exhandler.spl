@@ -11,8 +11,6 @@ VPagenum = [PTBR + 2*BadVAddr];
 alias physicalSP S4;
 physicalSP=([PTBR + 2*(SP/512)]*512) + (SP%512);
 
-breakpoint;
-
 if (Cause != 0) then
 	if (Cause == 1) then
 		print("Illegal instruction");
@@ -114,7 +112,5 @@ endif;
 
 SP=SP+1;
 [physicalSP + 1]=Ip_addr;
-
-breakpoint;
 
 ireturn;
