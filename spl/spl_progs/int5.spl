@@ -30,6 +30,9 @@ if (sysCallNo == 8) then
 	[newPCB]=newPID;
 
 	alias freePageIndex S6;
+	alias pageIndex S7;
+	alias counter S8;
+	alias DataBlock S9;
 	freePageIndex=0;
 	while(freePageIndex < 64) do
 		if ([MEM_LIST + freePageIndex] == 0) then
@@ -40,15 +43,66 @@ if (sysCallNo == 8) then
 	endwhile;
 
 	if (freePageIndex == 64) then
-		[physicalSP - 2]=-1;
-		ireturn;
+		pageIndex=0;
+		counter=0;
+		while(1) do
+			if (counter == 256) then
+				[physicalSP - 2]=-1;
+				ireturn;
+			endif;
+
+			if (pageIndex >= 256) then
+				pageIndex=pageIndex-256;
+			endif;
+
+			if ((pageIndex % 8) == 6) then
+				pageIndex=pageIndex+2;
+				counter=counter+1;
+				continue;
+			endif;
+
+			if ([PAGE_TABLE + pageIndex + 1] == "01") then
+				if ([MEM_LIST + [PAGE_TABLE + pageIndex]] > 1) then
+					pageIndex=pageIndex+2;
+					counter=counter+1;
+					continue;
+				endif;
+
+				DataBlock=448;
+				while(DataBlock < 512) do
+					if ([DISK_LIST + DataBlock] == 0) then
+						break;
+					endif;
+					DataBlock=DataBlock+1;
+				endwhile;
+
+				if (DataBlock == 512) then
+					[physicalSP - 2]=-1;
+					ireturn;
+				endif;
+
+				store([PAGE_TABLE + pageIndex],DataBlock);
+				[DISK_LIST + DataBlock]=1;
+				store(6,20);
+
+				freePageIndex=[PAGE_TABLE + pageIndex];
+				[PAGE_TABLE + pageIndex]=DataBlock;
+				[PAGE_TABLE + pageIndex + 1]="00";
+				break;
+			endif;
+
+			if ([PAGE_TABLE + pageIndex + 1] == "11") then
+				[PAGE_TABLE + pageIndex + 1]="01";
+			endif;
+
+			pageIndex=pageIndex+2;
+			counter=counter+1;
+		endwhile;
 	endif;
 
-	alias newPTBR S7;
+	alias newPTBR S10;
 	newPTBR=PAGE_TABLE + 8*newPID;
 
-	alias counter S8;
-	alias pageIndex S9;
 	counter=0;
 	pageIndex=PTLR-1;
 	while(counter < 512) do
@@ -59,7 +113,6 @@ if (sysCallNo == 8) then
 	[newPTBR + 2*pageIndex]=freePageIndex;
 	[newPTBR + 2*pageIndex + 1]="01";
 
-	alias DataBlock S10;
 	pageIndex=0;
 	while(pageIndex < (PTLR - 1)) do
 		DataBlock=[PTBR + 2*pageIndex];

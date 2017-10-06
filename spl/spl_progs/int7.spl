@@ -4,8 +4,6 @@ physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 alias sysCallNo S1;
 sysCallNo = [physicalSP - 1];
 
-breakpoint;
-
 if (sysCallNo == 10) then
 	alias currentPID S2;
 	currentPID=(PTBR - 1024)/8;
@@ -186,7 +184,5 @@ if ((sysCallNo == 10) || (sysCallNo == 13)) then
 	[physicalSP] = [newPCB + 4];
 	[newPCB + 1] = 2;
 endif;
-
-breakpoint;
 
 ireturn;

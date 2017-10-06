@@ -47,21 +47,31 @@ endwhile;
 
 alias pageIndex S6;
 alias DataBlock S7;
+alias counter S8;
 pageIndex=PTBR - PAGE_TABLE + 2*BadVAddr + 2;
+counter=0;
 if (freePageIndex == 64) then
 	while(1) do
+		if (counter == 256) then
+			SP=SP+2;
+			[physicalSP + 1]=10;
+			inline "JMP 11776";
+		endif;
+
 		if (pageIndex >= 256) then
 			pageIndex=pageIndex-256;
 		endif;
 
 		if ((pageIndex % 8) == 6) then
 			pageIndex=pageIndex+2;
+			counter=counter+1;
 			continue;
 		endif;
 
 		if ([PAGE_TABLE + pageIndex + 1] == "01") then
 			if ([MEM_LIST + [PAGE_TABLE + pageIndex]] > 1) then
 				pageIndex=pageIndex+2;
+				counter=counter+1;
 				continue;
 			endif;
 
@@ -94,6 +104,7 @@ if (freePageIndex == 64) then
 		endif;
 
 		pageIndex=pageIndex+2;
+		counter=counter+1;
 	endwhile;
 endif;
 
