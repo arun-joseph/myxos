@@ -38,6 +38,44 @@ while(1) do
 	newPID = newPID+1;
 endwhile;
 
+alias counter S5;
+alias DataBlock S6;
+alias freePageIndex S7;
+alias newPTBR S8;
+newPTBR=[newPCB + 5];
+if ([newPTBR + 6] >= 448) then
+	freePageIndex=0;
+	while(freePageIndex < 64) do
+		if ([MEM_LIST + freePageIndex] == 0) then
+			load(freePageIndex,[newPTBR + 6]);
+			[DISK_LIST + [newPTBR + 6]]=0;
+			[MEM_LIST + freePageIndex]=1;
+			store(6,20);
+			[newPTBR + 6]=freePageIndex;
+			[newPTBR + 7]="11";
+			break;
+		endif;
+		freePageIndex=freePageIndex+1;
+	endwhile;
+
+	if (freePageIndex == 64) then
+		load(1,[newPTBR + 6]);
+		store([PTBR + 6],[newPTBR + 6]);
+
+		counter=0;
+		while(counter < 512) do
+			[[PTBR + 6]*512 + counter]=[SCRATCHPAD + counter];
+			counter=counter+1;
+		endwhile;
+
+		freePageIndex=[PTBR + 6];
+		[PTBR + 6]=[newPTBR + 6];
+		[PTBR + 7]="00";
+		[newPTBR + 6]=freePageIndex;
+		[newPTBR + 7]="11";
+	endif;
+endif;
+
 BP = [newPCB + 2];
 SP = [newPCB + 3];
 PTBR = [newPCB + 5];

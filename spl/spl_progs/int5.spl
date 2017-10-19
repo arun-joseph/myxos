@@ -55,7 +55,7 @@ if (sysCallNo == 8) then
 				pageIndex=pageIndex-256;
 			endif;
 
-			if ((pageIndex % 8) == 6) then
+			if (pageIndex == (PTBR - PAGE_TABLE + 6)) then
 				pageIndex=pageIndex+2;
 				counter=counter+1;
 				continue;
