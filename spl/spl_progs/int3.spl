@@ -42,6 +42,18 @@ if (sysCallNo == 6) then
 	endif;
 
 	[currentPCB + 2*fileDescriptor + 16]=newLseek;
+//exam
+	alias number S9;
+	alias counter S10;
+	counter=0;
+	number=[63*512 + currentPID*8 + fileDescriptor];
+	while(counter < 32) do
+		if ([63*512 + counter*8 + fileDescriptor] == number) then
+			[READY_LIST + 32*counter + 2*fileDescriptor + 16]=newLseek;
+		endif;
+		counter=counter+1;
+	endwhile;
+
 	[physicalSP - 2]=0;
 endif;
 
@@ -86,6 +98,19 @@ if (sysCallNo == 7) then
 	load(1,[SCRATCHPAD + (LSEEKpos/512)]);
 	[physicalSP - 3]=[SCRATCHPAD + (LSEEKpos%512)];
 	[currentPCB + 2*fileDescriptor + 16]=[currentPCB + 2*fileDescriptor + 16]+1;
+//exam
+	alias number S10;
+	alias counter S11;
+	alias newLseek S12;
+	newLseek=[currentPCB + 2*fileDescriptor + 16];
+	counter=0;
+	number=[63*512 + currentPID*8 + fileDescriptor];
+	while(counter < 32) do
+		if ([63*512 + counter*8 + fileDescriptor] == number) then
+			[READY_LIST + 32*counter + 2*fileDescriptor + 16]=newLseek;
+		endif;
+		counter=counter+1;
+	endwhile;
 	[physicalSP - 2]=0;
 endif;
 

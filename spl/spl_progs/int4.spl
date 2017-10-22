@@ -74,6 +74,19 @@ if (sysCallNo == 5) then
 	[SCRATCHPAD + (LSEEKpos%512)]=wordToWrite;
 	store(1,DFLIndex);
 	[currentPCB + 2*fileDescriptor + 16]=[currentPCB + 2*fileDescriptor + 16]+1;
+//exam
+	alias number S11;
+	alias counter S12;
+	alias newLseek S13;
+	newLseek=[currentPCB + 2*fileDescriptor + 16];
+	counter=0;
+	number=[63*512 + currentPID*8 + fileDescriptor];
+	while(counter < 32) do
+		if ([63*512 + counter*8 + fileDescriptor] == number) then
+			[READY_LIST + 32*counter + 2*fileDescriptor + 16]=newLseek;
+		endif;
+		counter=counter+1;
+	endwhile;
 	[physicalSP - 2]=0;
 endif;
 

@@ -1,14 +1,14 @@
-alias currentPID S0;
+alias currentPID S2;
 currentPID = (PTBR - 1024)/8;
 
-alias currentPCB S1;
+alias currentPCB S3;
 currentPCB = READY_LIST + 32*currentPID;
 
 [currentPCB + 1] = 1; // Set STATE to READY
 [currentPCB + 2] = BP;
 [currentPCB + 3] = SP-1;
 
-alias physicalSP S2;
+alias physicalSP S0;
 physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 
 [currentPCB + 4] = [physicalSP]; // Save IP of current process in the PCB
@@ -24,9 +24,9 @@ physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 [currentPCB + 13] = R6;
 [currentPCB + 14] = R7;
 
-alias newPID S3;
+alias newPID S4;
 newPID = currentPID + 1;
-alias newPCB S4;
+alias newPCB S5;
 while(1) do
 	if (newPID == 32) then
 		newPID=0;
@@ -38,14 +38,14 @@ while(1) do
 	newPID = newPID+1;
 endwhile;
 
-alias counter S5;
-alias DataBlock S6;
-alias freePageIndex S7;
-alias newPTBR S8;
+alias counter S6;
+alias DataBlock S7;
+alias freePageIndex S8;
+alias newPTBR S9;
 newPTBR=[newPCB + 5];
 if ([newPTBR + 6] >= 448) then
 	freePageIndex=0;
-	while(freePageIndex < 64) do
+	while(freePageIndex < 63) do
 		if ([MEM_LIST + freePageIndex] == 0) then
 			load(freePageIndex,[newPTBR + 6]);
 			[DISK_LIST + [newPTBR + 6]]=0;
@@ -58,7 +58,7 @@ if ([newPTBR + 6] >= 448) then
 		freePageIndex=freePageIndex+1;
 	endwhile;
 
-	if (freePageIndex == 64) then
+	if (freePageIndex == 63) then
 		load(1,[newPTBR + 6]);
 		store([PTBR + 6],[newPTBR + 6]);
 
@@ -90,7 +90,7 @@ R6 = [newPCB + 13];
 R7 = [newPCB + 14];
 
 SP = SP + 1;
-alias newphysicalSP S2;
+alias newphysicalSP S0;
 newphysicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
 [newphysicalSP] = [newPCB + 4]; // Stores IP field value of PCB on the disk
 [newPCB + 1] = 2;

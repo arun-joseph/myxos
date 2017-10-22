@@ -37,7 +37,7 @@ if (VPagenum == -1) then
 endif;
 
 freePageIndex=0;
-while(freePageIndex < 64) do
+while(freePageIndex < 63) do
 	if ([MEM_LIST + freePageIndex] == 0) then
 		[MEM_LIST + freePageIndex]=1;
 		break;
@@ -50,7 +50,7 @@ alias DataBlock S7;
 alias counter S8;
 pageIndex=PTBR - PAGE_TABLE + 2*BadVAddr + 2;
 counter=0;
-if (freePageIndex == 64) then
+if (freePageIndex == 63) then
 	while(1) do
 		if (counter == 256) then
 			SP=SP+2;

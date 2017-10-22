@@ -61,6 +61,9 @@ if (sysCallNo == 2) then
 		if ([currentPCB + 2*fileDescriptor + 15] == -1) then
 			[currentPCB + 2*fileDescriptor + 15]=FileIndex;
 			[currentPCB + 2*fileDescriptor + 16]=0;
+//exam
+			[63*512 + currentPID*8 + fileDescriptor]=[63*512 + 256];
+			[63*512 + 256]=[63*512 + 256]+1;
 			break;
 		endif;
 		fileDescriptor=fileDescriptor+1;
@@ -107,6 +110,8 @@ if (sysCallNo == 3) then
 
 	[currentPCB + 2*fileDescriptor + 15]=-1;
 	[currentPCB + 2*fileDescriptor + 16]=-1;
+//exam
+	[63*512 + currentPID*8 + fileDescriptor]=-1;
 	[physicalSP - 2]=0;
 endif;
 

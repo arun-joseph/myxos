@@ -87,6 +87,9 @@ if (sysCallNo == 9) then
 
 		[currentPCB + 2*fileDescriptor + 15]=-1;
 		[currentPCB + 2*fileDescriptor + 16]=-1;
+//exam
+		[63*512 + currentPID*8 + fileDescriptor]=-1;
+
 		fileDescriptor=fileDescriptor+1;
 	endwhile;
 

@@ -58,6 +58,8 @@ if (sysCallNo == 10) then
 
 		[currentPCB + 2*fileDescriptor + 15]=-1;
 		[currentPCB + 2*fileDescriptor + 16]=-1;
+//exam
+		[63*512 + currentPID*8 + fileDescriptor]=-1;
 		fileDescriptor=fileDescriptor+1;
 	endwhile;
 
@@ -117,75 +119,7 @@ if (sysCallNo == 14) then
 endif;
 
 if ((sysCallNo == 10) || (sysCallNo == 13)) then
-	alias newPID S4;
-	newPID = currentPID + 1;
-	alias newPCB S5;
-	while(1) do
-		if (newPID == 32) then
-			newPID=0;
-		endif;
-		newPCB = READY_LIST + 32*newPID;
-		if ([newPCB + 1] == 1) then
-			break;
-		endif;
-		newPID = newPID+1;
-	endwhile;
-
-	alias counter S6;
-	alias DataBlock S7;
-	alias freePageIndex S8;
-	alias newPTBR S9;
-	newPTBR=[newPCB + 5];
-	if ([newPTBR + 6] >= 448) then
-		freePageIndex=0;
-		while(freePageIndex < 64) do
-			if ([MEM_LIST + freePageIndex] == 0) then
-				load(freePageIndex,[newPTBR + 6]);
-				[DISK_LIST + [newPTBR + 6]]=0;
-				[MEM_LIST + freePageIndex]=1;
-				store(6,20);
-				[newPTBR + 6]=freePageIndex;
-				[newPTBR + 7]="11";
-				break;
-			endif;
-			freePageIndex=freePageIndex+1;
-		endwhile;
-
-		if (freePageIndex == 64) then
-			load(1,[newPTBR + 6]);
-			store([PTBR + 6],[newPTBR + 6]);
-
-			counter=0;
-			while(counter < 512) do
-				[[PTBR + 6]*512 + counter]=[SCRATCHPAD + counter];
-				counter=counter+1;
-			endwhile;
-
-			freePageIndex=[PTBR + 6];
-			[PTBR + 6]=[newPTBR + 6];
-			[PTBR + 7]="00";
-			[newPTBR + 6]=freePageIndex;
-			[newPTBR + 7]="11";
-		endif;
-	endif;
-
-	BP = [newPCB + 2];
-	SP = [newPCB + 3];
-	PTBR = [newPCB + 5];
-	PTLR = [newPCB + 6];
-	R0 = [newPCB + 7];
-	R1 = [newPCB + 8];
-	R2 = [newPCB + 9];
-	R3 = [newPCB + 10];
-	R4 = [newPCB + 11];
-	R5 = [newPCB + 12];
-	R6 = [newPCB + 13];
-	R7 = [newPCB + 14];
-
-	SP = SP + 1;
-	physicalSP = ([PTBR + 2*(SP/512)]*512) + (SP%512);
-	[physicalSP] = [newPCB + 4];
-	[newPCB + 1] = 2;
+	inline "JMP 4742";
 endif;
 
 ireturn;

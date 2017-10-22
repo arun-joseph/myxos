@@ -26,23 +26,32 @@ while (counter <= 25) do
 	[MEM_LIST + counter] = 1;
 	counter=counter+1;
 endwhile;
-while (counter < 64) do
+while (counter < 63) do
 	[MEM_LIST + counter] = 0;
 	counter=counter+1;
 endwhile;
+[MEM_LIST + 63]=1;
 			
 counter = 0;
 while (counter <  128) do
 	[FILE_TABLE + counter + 0] = -1;
 	[FILE_TABLE + counter + 1] =  0;
 	counter=counter+2;
-endwhile;	
+endwhile;
 
 counter = 0;
 while (counter < 32) do
 	[READY_LIST + 32*counter + 1] = 0;
 	counter=counter+1;
 endwhile;
+
+//new data structure
+counter=0;
+while (counter < 256) do
+	[63*512 + counter]=-1;
+	counter=counter+1;
+endwhile;
+[63*512 + 256]=0;
 
 counter = 448;
 while (counter < 512) do

@@ -34,7 +34,7 @@ if (sysCallNo == 8) then
 	alias counter S8;
 	alias DataBlock S9;
 	freePageIndex=0;
-	while(freePageIndex < 64) do
+	while(freePageIndex < 63) do
 		if ([MEM_LIST + freePageIndex] == 0) then
 			[MEM_LIST + freePageIndex]=1;
 			break;
@@ -42,7 +42,7 @@ if (sysCallNo == 8) then
 		freePageIndex=freePageIndex+1;
 	endwhile;
 
-	if (freePageIndex == 64) then
+	if (freePageIndex == 63) then
 		pageIndex=0;
 		counter=0;
 		while(1) do
@@ -149,6 +149,8 @@ if (sysCallNo == 8) then
 		[newPCB + 2*counter + 15]=[currentPCB + 2*counter + 15];
 		[newPCB + 2*counter + 16]=[currentPCB + 2*counter + 16];
 		FileIndex=[newPCB + 2*counter + 15];
+//exam
+		[63*512 + newPID*8 + counter]=[63*512 + currentPID*8 + counter];
 
 		if (FileIndex != -1) then
 			[FILE_TABLE + 2*FileIndex + 1]=[FILE_TABLE + 2*FileIndex + 1]+1;
